@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rajveer Messenger</title>
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: linear-gradient(145deg, #dce3f4, #f2f7ff);
+      margin: 0;
+    }
+
+    #messenger {
+      width: 100%;
+      max-width: 500px;
+      background: #ffffff;
+      border-radius: 20px;
+      box-shadow: 10px 10px 20px rgba(0, 0, 0, 0.2), -5px -5px 15px rgba(255, 255, 255, 0.7);
+      padding: 30px;
+      text-align: center;
+    }
+
+    h2 {
+      font-size: 1.5rem;
+      margin-bottom: 20px;
+      color: #007bff;
+      background: linear-gradient(145deg, #e0e5ec, #ffffff);
+      padding: 15px;
+      border-radius: 15px;
+      box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.2), -5px -5px 10px rgba(255, 255, 255, 0.7);
+      display: inline-block;
+    }
+
+    #messages {
+      margin-bottom: 20px;
+      height: 200px;
+      overflow-y: auto;
+      border-radius: 10px;
+      padding: 15px;
+      background: #f9f9f9;
+      box-shadow: inset 5px 5px 10px rgba(0, 0, 0, 0.1), inset -5px -5px 10px rgba(255, 255, 255, 0.7);
+    }
+
+    #message-input input,
+    #file-input input {
+      width: 90%;
+      padding: 10px;
+      border-radius: 10px;
+      outline: none;
+      font-size: 1rem;
+      color: #333;
+      border: 2px solid #dce3f4;
+      box-shadow: inset 3px 3px 5px rgba(0, 0, 0, 0.1), inset -3px -3px 5px rgba(255, 255, 255, 0.7);
+    }
+
+    #buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    button {
+      flex: 1;
+      padding: 12px;
+      border-radius: 15px;
+      font-size: 1rem;
+      font-weight: bold;
+      color: white;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: 3px solid #f2f7ff;
+      box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.2), -5px -5px 10px rgba(255, 255, 255, 0.7);
+    }
+
+    #send-text { background: #007bff; }
+    #send-original { background: #28a745; }
+    #send-compressed { background: #ff6600; }
+
+    button:active {
+      transform: scale(0.95); /* Press effect */
+      box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.2);
+    }
+
+    .loading {
+      opacity: 0.6;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="messenger">
+    <h2>Send Messages to Rajveer Singh</h2>
+    <div id="messages"></div>
+    <div id="message-input">
+      <input type="text" id="message" placeholder="Type your message...">
+    </div>
+    <div id="file-input">
+      <label>Attach Photos/Videos:</label>
+      <input type="file" id="file" accept="image/*,video/*" multiple>
+    </div>
+    <div id="buttons">
+      <button id="send-text">Send Text</button>
+      <button id="send-original">Send Original</button>
+      <button id="send-compressed">Send Compressed</button>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const sendTextButton = document.getElementById("send-text");
+      const sendOriginalButton = document.getElementById("send-original");
+      const sendCompressedButton = document.getElementById("send-compressed");
+      const messageInput = document.getElementById("message");
+      const fileInput = document.getElementById("file");
+      const messagesContainer = document.getElementById("messages");
+
+      const toggleLoading = (button, state) => {
+        if (state) {
+          button.textContent = "Sending...";
+          button.classList.add("loading");
+        } else {
+          button.textContent = button.dataset.defaultText;
+          button.classList.remove("loading");
+        }
+      };
+
+      const sendMessageToBackend = async (message) => {
+        if (!message.trim()) return;
+
+        try {
+          await fetch('https://msg-production-ae35.up.railway.app/send-message', {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ chat_id: "-4637727643", text: message }) // use your chat ID
+          });
+
+          addMessageToUI(`You: ${message}`);
+        } catch (error) {
+          console.error("Error sending message:", error);
+        }
+      };
+
+      const addMessageToUI = (message) => {
+        const messageDiv = document.createElement("div");
+        messageDiv.textContent = message;
+        messagesContainer.appendChild(messageDiv);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      };
+
+      sendTextButton.addEventListener("click", () => {
+        sendMessageToBackend(messageInput.value.trim());
+        messageInput.value = "";
+      });
+
+      // For file sending, you need a special backend endpoint; let's handle text sending first
+      sendOriginalButton.addEventListener("click", () => {
+        alert('Currently only text sending is implemented!');
+      });
+
+      sendCompressedButton.addEventListener("click", () => {
+        alert('Currently only text sending is implemented!');
+      });
+
+      document.querySelectorAll("button").forEach(button => {
+        button.dataset.defaultText = button.textContent;
+      });
+    });
+</script>
+</body>
+</html>
