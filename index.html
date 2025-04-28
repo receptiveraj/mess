@@ -111,67 +111,86 @@
   </div>
 
   <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const sendTextButton = document.getElementById("send-text");
-      const sendOriginalButton = document.getElementById("send-original");
-      const sendCompressedButton = document.getElementById("send-compressed");
-      const messageInput = document.getElementById("message");
-      const fileInput = document.getElementById("file");
-      const messagesContainer = document.getElementById("messages");
+document.addEventListener("DOMContentLoaded", () => {
+  const sendTextButton = document.getElementById("send-text");
+  const sendOriginalButton = document.getElementById("send-original");
+  const sendCompressedButton = document.getElementById("send-compressed");
+  const messageInput = document.getElementById("message");
+  const fileInput = document.getElementById("file");
+  const messagesContainer = document.getElementById("messages");
+  const chatId = "-4637727643"; // your chat ID
 
-      const toggleLoading = (button, state) => {
-        if (state) {
-          button.textContent = "Sending...";
-          button.classList.add("loading");
-        } else {
-          button.textContent = button.dataset.defaultText;
-          button.classList.remove("loading");
-        }
-      };
+  const addMessageToUI = (message) => {
+    const messageDiv = document.createElement("div");
+    messageDiv.textContent = message;
+    messagesContainer.appendChild(messageDiv);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  };
 
-      const sendMessageToBackend = async (message) => {
-        if (!message.trim()) return;
+  async function sendMessageToBackend(message) {
+    if (!message.trim()) return;
 
-        try {
-          await fetch('https://msg-production-ae35.up.railway.app/send-message', {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ chat_id: "-4637727643", text: message }) // use your chat ID
-          });
-
-          addMessageToUI(`You: ${message}`);
-        } catch (error) {
-          console.error("Error sending message:", error);
-        }
-      };
-
-      const addMessageToUI = (message) => {
-        const messageDiv = document.createElement("div");
-        messageDiv.textContent = message;
-        messagesContainer.appendChild(messageDiv);
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-      };
-
-      sendTextButton.addEventListener("click", () => {
-        sendMessageToBackend(messageInput.value.trim());
-        messageInput.value = "";
+    try {
+      await fetch('https://msg-production-ae35.up.railway.app/send-message', {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ chat_id: chatId, text: message })
       });
 
-      // For file sending, you need a special backend endpoint; let's handle text sending first
-      sendOriginalButton.addEventListener("click", () => {
-        alert('Currently only text sending is implemented!');
+      addMessageToUI(`You: ${message}`);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  async function sendFileToBackend(file, type) {
+    if (!file) {
+      alert("Please select a file first.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('chat_id', chatId);
+    formData.append('file', file);
+    formData.append('type', type);
+
+    try {
+      await fetch('https://msg-production-ae35.up.railway.app/send-file', {
+        method: "POST",
+        body: formData
       });
 
-      sendCompressedButton.addEventListener("click", () => {
-        alert('Currently only text sending is implemented!');
-      });
+      addMessageToUI(`You sent a ${type}: ${file.name}`);
+    } catch (error) {
+      console.error(error);
+    }
+  }
 
-      document.querySelectorAll("button").forEach(button => {
-        button.dataset.defaultText = button.textContent;
-      });
-    });
+  sendTextButton.addEventListener("click", () => {
+    sendMessageToBackend(messageInput.value.trim());
+    messageInput.value = "";
+  });
+
+  sendOriginalButton.addEventListener("click", () => {
+    const file = fileInput.files[0];
+    sendFileToBackend(file, "document");
+  });
+
+  sendCompressedButton.addEventListener("click", () => {
+    const file = fileInput.files[0];
+    if (file) {
+      if (file.type.startsWith("image/")) {
+        sendFileToBackend(file, "photo");
+      } else if (file.type.startsWith("video/")) {
+        sendFileToBackend(file, "video");
+      } else {
+        sendFileToBackend(file, "document"); // fallback
+      }
+    }
+  });
+});
 </script>
 </body>
 </html>
